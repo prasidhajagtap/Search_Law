@@ -114,8 +114,8 @@
     const SUPABASE_URL = "https://kgbcygfemcdorqryvxdp.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnYmN5Z2ZlbWNkb3Jxcnl2eGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzUxNDAsImV4cCI6MjA5NTM1MTE0MH0.XPc2iS9rfmrwRh6f_1IGIiIr1wbqzafJPXnk389yLT0";
 
-    // Initialize Supabase Client
-    const supabase = supa.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+   // FIX: Use 'sbClient' because CDN already claim 'supabase' name
+    const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function huntDataPit() {
         const input = document.getElementById('searchBox').value.trim();
@@ -127,15 +127,13 @@
 
         if (!input) return;
 
-        // Reset and show loading status
         outputBox.style.display = "none";
         statusBox.style.display = "block";
         statusBox.innerText = "Hunting in pit...";
 
         try {
-            // Complex search: check section number match OR title keyword match
-            // Pulls law data AND nested judgments through junction table
-            const { data, error } = await supabase
+            // Use new variable name here to hunt
+            const { data, error } = await sbClient
                 .from('laws')
                 .select(`
                     id,
@@ -163,7 +161,6 @@
                 titleBox.innerText = `${law.code_type} Section ${law.section_number}: ${law.title}`;
                 textBox.innerText = law.simple_text;
 
-                // Extract linked judgments from inner join payload
                 let caseHTML = "<h3>Shield Judgments (Men Rights):</h3>";
                 const relationships = law.law_judgments || [];
                 
@@ -197,6 +194,5 @@
         }
     }
 </script>
-
 </body>
 </html>
