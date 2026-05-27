@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Law Shield - Smart Translation</title>
+    <title>Law Shield India</title>
+    <!-- Supabase Official CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
             color: #e0e0e0;
             margin: 0;
             padding: 20px;
@@ -16,149 +17,181 @@
             justify-content: center;
         }
         .container {
-            background-color: #262626;
+            background-color: #1e1e1e;
             width: 100%;
-            max-width: 650px;
+            max-width: 700px;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
         }
         h1 {
             color: #ffffff;
             text-align: center;
             margin-top: 0;
+            font-size: 26px;
+            border-bottom: 2px solid #ff9900;
+            padding-bottom: 10px;
         }
-        .search-box-container {
+        .search-area {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin: 25px 0;
         }
-        input, button {
-            padding: 15px;
+        input {
+            flex: 1;
+            padding: 14px;
             font-size: 16px;
-            border: 1px solid #444;
-            border-radius: 6px;
-            background-color: #333;
-            color: #fff;
-        }
-        input { flex: 1; }
-        button {
-            background-color: #ff9900;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-        }
-        button:hover { background-color: #ffb347; }
-        
-        /* Language Selector Stones */
-        .lang-bar {
-            display: none;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-        .lang-btn {
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: #444;
-            color: #fff;
-            border: 1px solid #555;
+            border: 1px solid #333;
             border-radius: 4px;
-        }
-        .lang-btn.active {
-            background-color: #0099ff;
+            background-color: #2a2a2a;
             color: #fff;
-            border-color: #0099ff;
         }
-
+        input:focus {
+            outline: 2px solid #ff9900;
+        }
+        button.search-btn {
+            padding: 0 24px;
+            font-size: 16px;
+            background-color: #ff9900;
+            color: #121212;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.search-btn:hover {
+            background-color: #ffb347;
+        }
+        .lang-tabs {
+            display: none;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background-color: #2a2a2a;
+            color: #bbb;
+            border: 1px solid #333;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tab.active {
+            background-color: #ff9900;
+            color: #121212;
+            font-weight: bold;
+            border-color: #ff9900;
+        }
         .result-box {
             display: none;
-            background-color: #333;
+            background-color: #252525;
             padding: 20px;
             border-radius: 6px;
             border-left: 5px solid #ff9900;
         }
-        .action-zone {
-            background-color: #2b3a2b;
-            border-left: 5px solid #28a745;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 4px;
+        .section-header {
+            color: #ff9900;
+            margin-top: 0;
+            font-size: 22px;
         }
-        .optional-links {
-            margin-top: 25px;
+        .block-title {
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .text-content {
+            background-color: #1e1e1e;
+            padding: 12px;
+            border-radius: 4px;
+            line-height: 1.6;
+            white-space: pre-line;
+            margin: 5px 0 15px 0;
+        }
+        .links-zone {
+            margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px dashed #555;
-            font-size: 14px;
+            border-top: 1px dashed #444;
         }
         .case-link {
-            display: block;
-            margin-top: 5px;
+            display: inline-block;
+            margin-top: 8px;
             color: #0099ff;
             text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
         }
-        .status { color: #aaa; font-style: italic; display: none; }
+        .case-link:hover {
+            text-decoration: underline;
+        }
+        .status {
+            color: #aaa;
+            font-style: italic;
+            text-align: center;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Law Shield Core</h1>
+    <h1>Law Shield Core Interface</h1>
     
-    <div class="search-box-container">
-        <input type="text" id="searchBox" placeholder="Enter Section Number (e.g., 85)...">
-        <button onclick="huntDataPit()">Search</button>
+    <div class="search-area">
+        <input type="text" id="searchBox" placeholder="Enter Section Number (e.g., 85 or 144)...">
+        <button class="search-btn" onclick="huntDataPit()">Search</button>
     </div>
     
-    <div id="langBar" class="lang-bar">
-        <button class="lang-btn active" id="btn-en" onclick="switchLang('en')">English</button>
-        <button class="lang-btn" id="btn-hi" onclick="switchLang('hi')">हिंदी (Hindi)</button>
-        <button class="lang-btn" id="btn-mr" onclick="switchLang('mr')">मराठी (Marathi)</button>
+    <div id="langTabs" class="lang-tabs">
+        <button class="tab active" id="tab-en" onclick="changeLanguage('en')">English</button>
+        <button class="tab" id="tab-hi" onclick="changeLanguage('hi')">हिंदी (Hindi)</button>
+        <button class="tab" id="tab-mr" onclick="changeLanguage('mr')">मराठी (Marathi)</button>
     </div>
     
-    <div id="statusMessage" class="status">Hunting...</div>
+    <div id="statusMessage" class="status">Connecting to Database Pit...</div>
 
     <div id="output" class="result-box">
-        <h2 id="lawTitle"></h2>
+        <h2 id="displayTitle" class="section-header"></h2>
         
-        <h3>1. Law Simplified:</h3>
-        <p id="lawSimpleText"></p>
+        <div class="block-title">1. Simplified Law Meaning</div>
+        <div id="displayExplanation" class="text-content"></div>
         
-        <div class="action-zone">
-            <h3>2. Immediate Next Steps for Man:</h3>
-            <p id="lawNextSteps"></p>
-        </div>
+        <div class="block-title">2. Critical Next Steps for Safety</div>
+        <div id="displaySteps" class="text-content" style="border-left: 3px solid #28a745;"></div>
         
-        <div class="optional-links" id="optionalLinksZone">
-            <!-- Verifiable Case Links Show Up Here Dynamically -->
-        </div>
+        <div id="displayLinks" class="links-zone"></div>
     </div>
 </div>
 
 <script>
+    // ASSEMBLE CORDS
     const SUPABASE_URL = "https://kgbcygfemcdorqryvxdp.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnYmN5Z2ZlbWNkb3Jxcnl2eGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzUxNDAsImV4cCI6MjA5NTM1MTE0MH0.XPc2iS9rfmrwRh6f_1IGIiIr1wbqzafJPXnk389yLT0";
+     
+    // SAFE CLIENT DECLARATION (No Name Collision)
     const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    let activeLawData = null; // Holds the current live data stone
+    let currentRecord = null;
 
     async function huntDataPit() {
-        const rawInput = document.getElementById('searchBox').value.trim();
+        const queryInput = document.getElementById('searchBox').value.trim();
         const outputBox = document.getElementById('output');
         const statusBox = document.getElementById('statusMessage');
-        const langBar = document.getElementById('langBar');
+        const tabsBox = document.getElementById('langTabs');
 
-        if (!rawInput) return;
+        if (!queryInput) return;
 
         outputBox.style.display = "none";
-        langBar.style.display = "none";
+        tabsBox.style.display = "none";
         statusBox.style.display = "block";
+        statusBox.innerText = "Searching database pits...";
 
         try {
-            const numMatch = rawInput.match(/\d+/);
-            if (!numMatch) {
-                statusBox.innerText = "Error: Please enter a valid numerical section number.";
+            // Extract numbers from string input
+            const numericalSection = queryInput.match(/\d+/);
+            if (!numericalSection) {
+                statusBox.innerText = "Error: Please input a plain section number.";
                 return;
             }
 
@@ -169,68 +202,68 @@
                     simple_text_hi, next_steps_hi, simple_text_mr, next_steps_mr,
                     law_judgments ( judgments ( case_name, reference_url ) )
                 `)
-                .eq('section_number', numMatch[0])
+                .eq('section_number', numericalSection[0])
                 .limit(1);
 
             statusBox.style.display = "none";
             if (error) throw error;
 
             if (data && data.length > 0) {
-                activeLawData = data[0];
-                langBar.style.display = "flex";
-                switchLang('en'); // Default to English display
+                currentRecord = data[0];
+                tabsBox.style.display = "flex";
+                changeLanguage('en'); // Default layout load
                 outputBox.style.display = "block";
             } else {
                 statusBox.style.display = "block";
-                statusBox.innerText = "No match inside the data pit.";
+                statusBox.innerText = "No record found for Section: " + numericalSection[0];
             }
         } catch (err) {
             console.error(err);
-            statusBox.innerText = "Pit connection error.";
+            statusBox.innerText = "System broke down. Check tokens.";
         }
     }
 
-    function switchLang(lang) {
-        if (!activeLawData) return;
+    function changeLanguage(lang) {
+        if (!currentRecord) return;
 
-        // Reset active status on buttons
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-${lang}`).classList.add('active');
+        // Reset Tab highlights
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${lang}`).classList.add('active');
 
-        const titleBox = document.getElementById('lawTitle');
-        const textBox = document.getElementById('lawSimpleText');
-        const stepsBox = document.getElementById('lawNextSteps');
-        const linksZone = document.getElementById('optionalLinksZone');
+        const titleE = document.getElementById('displayTitle');
+        const textE = document.getElementById('displayExplanation');
+        const stepsE = document.getElementById('displaySteps');
+        const linksE = document.getElementById('displayLinks');
 
-        // Render based on selected language block
         if (lang === 'hi') {
-            titleBox.innerText = `${activeLawData.code_type} धारा ${activeLawData.section_number}`;
-            textBox.innerText = activeLawData.simple_text_hi || "अनुवाद उपलब्ध नहीं है।";
-            stepsBox.innerText = activeLawData.next_steps_hi || "कोई कदम दर्ज नहीं किया गया।";
+            titleE.innerText = `${currentRecord.code_type} धारा ${currentRecord.section_number}`;
+            textE.innerText = currentRecord.simple_text_hi || "विवरण हिंदी में उपलब्ध नहीं है।";
+            stepsE.innerText = currentRecord.next_steps_hi || "कदम उपलब्ध नहीं हैं।";
         } else if (lang === 'mr') {
-            titleBox.innerText = `${activeLawData.code_type} कलम ${activeLawData.section_number}`;
-            textBox.innerText = activeLawData.simple_text_mr || "भाषांतर उपलब्ध नाही.";
-            stepsBox.innerText = activeLawData.next_steps_mr || "पुढील पावले उपलब्ध नाहीत.";
+            titleE.innerText = `${currentRecord.code_type} कलम ${currentRecord.section_number}`;
+            textE.innerText = currentRecord.simple_text_mr || "माहिती मराठीत उपलब्ध नाही.";
+            stepsE.innerText = currentRecord.next_steps_mr || "पुढील पावले उपलब्ध नाहीत.";
         } else {
-            // English default
-            titleBox.innerText = `${activeLawData.code_type} Section ${activeLawData.section_number}: ${activeLawData.title}`;
-            textBox.innerText = activeLawData.simple_text;
-            stepsBox.innerText = activeLawData.next_steps || "No next steps defined.";
+            // English Local Standard
+            titleE.innerText = currentRecord.title;
+            textE.innerText = currentRecord.simple_text;
+            stepsE.innerText = currentRecord.next_steps;
         }
 
-        // Render completely optional case links at the bottom
-        let linksHTML = "<strong>Optional Verification Links:</strong>";
-        const relations = activeLawData.law_judgments || [];
-        if (relations.length > 0) {
-            relations.forEach(r => {
-                if (r.judgments) {
-                    linksHTML += `<a class="case-link" href="${r.judgments.reference_url}" target="_blank">Verify Verdict: ${r.judgments.case_name} ↗</a>`;
+        // Render Completely Optional Verification Links at the bottom boundary
+        let linksMarkup = "<strong>Optional Judicial Verification Links:</strong><br>";
+        const relationships = currentRecord.law_judgments || [];
+        
+        if (relationships.length > 0) {
+            relationships.forEach(rel => {
+                if (rel.judgments) {
+                    linksMarkup += `<a class="case-link" href="${rel.judgments.reference_url}" target="_blank">Verify Judgment: ${rel.judgments.case_name} ↗</a><br>`;
                 }
             });
         } else {
-            linksHTML += "<p style='color:#777; margin:5px 0 0 0;'>No external citations linked.</p>";
+            linksMarkup += "<span style='color: #666; font-size: 13px;'>No specific citation links attached.</span>";
         }
-        linksZone.innerHTML = linksHTML;
+        linksE.innerHTML = linksMarkup;
     }
 </script>
 
