@@ -114,83 +114,115 @@
     const SUPABASE_URL = "https://kgbcygfemcdorqryvxdp.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnYmN5Z2ZlbWNkb3Jxcnl2eGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzUxNDAsImV4cCI6MjA5NTM1MTE0MH0.XPc2iS9rfmrwRh6f_1IGIiIr1wbqzafJPXnk389yLT0";
 
-   // FIX: Use 'sbClient' because CDN already claim 'supabase' name
+   <script>
+    // PUT YOUR REAL SUPABASE CREDS HERE
+    const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
     const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function huntDataPit() {
-        const input = document.getElementById('searchBox').value.trim();
+        const rawInput = document.getElementById('searchBox').value.trim();
         const outputBox = document.getElementById('output');
         const statusBox = document.getElementById('statusMessage');
         const titleBox = document.getElementById('lawTitle');
         const textBox = document.getElementById('lawSimpleText');
         const casesArea = document.getElementById('casesArea');
 
-        if (!input) return;
+        if (!rawInput) return;
 
         outputBox.style.display = "none";
         statusBox.style.display = "block";
         statusBox.innerText = "Hunting in pit...";
 
         try {
-            // Use new variable name here to hunt
-            const { data, error } = await sbClient
-                .from('laws')
-                .select(`
-                    id,
-                    code_type,
-                    section_number,
-                    title,
-                    simple_text,
-                    law_judgments (
-                        judgments (
-                            case_name,
-                            summary,
-                            reference_url
-                        )
+            // Base query builder
+            let query = sbClient.from('laws').select(`
+                id,
+                code_type,
+                section_number,
+                title,
+                simple_text,
+                law_judgments (
+                    judgments (
+                        case_name,
+                        summary,
+                        reference_url
                     )
-                `)
-                .or(`section_number.eq.${input},title.ilike.%${input}%,simple_text.ilike.%${input}%`)
-                .limit(1);
+                )
+            `);
+
+            // SMART PARSER: Split text and numbers
+            const numMatch = rawInput.match(/\d+/); // Find numbers
+            const letterMatch = rawInput.match(/[a-zA-Z]+/); // Find letters
+
+            if (numMatch && letterMatch) {
+                // Case 1: User typed "BNS 85" or "85 BNS"
+                const num = numMatch[0];
+                const code = letterMatch[0].toUpperCase();
+                query = query.eq('code_type', code).eq('section_number', num);
+            } else if (numMatch) {
+                // Case 2: User typed just number "85"
+                query = query.eq('section_number', numMatch[0]);
+            } else {
+                // Case 3: User typed keyword "cruelty" or "maintenance"
+                query = query.or(`title.ilike.%${rawInput}%,simple_text.ilike.%${rawInput}%`);
+            }
+
+            // Execute the built spear query
+            const { data, error } = await query;
 
             statusBox.style.display = "none";
 
             if (error) throw error;
 
+            // Display many results if found, not just limit 1
             if (data && data.length > 0) {
-                const law = data;
-                titleBox.innerText = `${law.code_type} Section ${law.section_number}: ${law.title}`;
-                textBox.innerText = law.simple_text;
-
-                let caseHTML = "<h3>Shield Judgments (Men Rights):</h3>";
-                const relationships = law.law_judgments || [];
+                let finalHTML = "";
                 
-                if (relationships.length > 0) {
-                    relationships.forEach(rel => {
-                        if (rel.judgments) {
-                            const c = rel.judgments;
-                            caseHTML += `
-                                <div class="case-law">
-                                    <strong>${c.case_name}</strong>
-                                    <p>${c.summary}</p>
-                                    <a href="${c.reference_url}" target="_blank">Verify Verdict ↗</a>
-                                </div>`;
-                        }
-                    });
-                } else {
-                    caseHTML += "<p>No specific shield judgment tied to this section yet.</p>";
-                }
+                data.forEach(law => {
+                    let caseHTML = "<h4>Shield Judgments (Men Rights):</h4>";
+                    const relationships = law.law_judgments || [];
+                    
+                    if (relationships.length > 0) {
+                        relationships.forEach(rel => {
+                            if (rel.judgments) {
+                                const c = rel.judgments;
+                                caseHTML += `
+                                    <div class="case-law">
+                                        <strong>${c.case_name}</strong>
+                                        <p>${c.summary}</p>
+                                        <a href="${c.reference_url}" target="_blank">Verify Verdict ↗</a>
+                                    </div>`;
+                            }
+                        });
+                    } else {
+                        caseHTML += "<p>No specific shield judgment tied to this section yet.</p>";
+                    }
 
-                casesArea.innerHTML = caseHTML;
+                    finalHTML += `
+                        <div style="margin-bottom: 30px; border-bottom: 1px solid #444; padding-bottom: 20px;">
+                            <h2>${law.code_type} Section ${law.section_number}: ${law.title}</h2>
+                            <p>${law.simple_text}</p>
+                            ${caseHTML}
+                        </div>
+                    `;
+                });
+
+                // Inject into single output box container
+                titleBox.innerText = "Search Results Matrix";
+                textBox.innerHTML = finalHTML;
+                casesArea.innerHTML = ""; 
                 outputBox.style.display = "block";
             } else {
                 statusBox.style.display = "block";
-                statusBox.innerText = "No laws found in pit for that query.";
+                statusBox.innerText = "No laws found for: " + rawInput;
             }
 
         } catch (err) {
             console.error(err);
             statusBox.style.display = "block";
-            statusBox.innerText = "Error! Machine broken or wrong credentials.";
+            statusBox.innerText = "Error! Connection broke or code mistake.";
         }
     }
 </script>
