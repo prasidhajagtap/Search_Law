@@ -3,65 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Law Shield</title>
+    <title>Law Shield - Live Pit</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #222;
-            color: #ddd;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
         }
         .container {
-            background-color: #333;
+            background-color: #262626;
             width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            max-width: 650px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
         }
         h1 {
-            color: #fff;
+            color: #ffffff;
             text-align: center;
             margin-top: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        .search-box-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
         }
         input {
-            width: 100%;
+            flex: 1;
             padding: 15px;
-            font-size: 18px;
-            border: none;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-            background-color: #444;
+            font-size: 16px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #333;
             color: #fff;
         }
         input:focus {
-            outline: 2px solid #f90;
+            outline: 2px solid #ff9900;
+        }
+        button {
+            padding: 0 25px;
+            font-size: 16px;
+            background-color: #ff9900;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #ffb347;
         }
         .result-box {
             display: none;
-            background-color: #444;
-            padding: 15px;
-            border-radius: 4px;
-            border-left: 5px solid #f90;
+            background-color: #333;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #ff9900;
         }
         .case-law {
-            background-color: #555;
+            background-color: #444;
             margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
-            border-left: 5px solid #09f;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #0099ff;
         }
         a {
-            color: #09f;
+            color: #0099ff;
             text-decoration: none;
             font-weight: bold;
         }
         a:hover {
             text-decoration: underline;
+        }
+        .status {
+            color: #aaa;
+            font-style: italic;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
@@ -69,8 +94,14 @@
 
 <div class="container">
     <h1>Law Shield Search</h1>
-    <input type="text" id="searchBox" placeholder="Search BNS 85, Maintenance, DV, Custody..." onkeyup="huntLaw()">
     
+    <div class="search-box-container">
+        <input type="text" id="searchBox" placeholder="Enter section number or keyword (e.g., 85, 498A, DV)...">
+        <button onclick="huntDataPit()">Search</button>
+    </div>
+    
+    <div id="statusMessage" class="status">Hunting in pit...</div>
+
     <div id="output" class="result-box">
         <h2 id="lawTitle"></h2>
         <p id="lawSimpleText"></p>
@@ -79,91 +110,90 @@
 </div>
 
 <script>
-    const lawData = {
-        "bns 85": {
-            title: "BNS 85 (Old IPC 498A)",
-            text: "Rule about cruelty by husband or family. High danger of fake traps.",
-            cases: [
-                {
-                    name: "Arnesh Kumar v. State of Bihar",
-                    desc: "Shield against arrest. Police cannot arrest automatically. Magistrate must verify.",
-                    link: "https://indiankanoon.org/doc/2982102/"
-                },
-                {
-                    name: "Kahkashan Kausar v. State of Bihar",
-                    desc: "Protects parents and siblings. Vague anger not enough for case.",
-                    link: "https://indiankanoon.org/doc/112651475/"
-                }
-            ]
-        },
-        "maintenance": {
-            title: "Maintenance & Alimony",
-            text: "Rules for giving shiny rocks and food. Woman cannot hide wealth.",
-            cases: [
-                {
-                    name: "Rajnesh v. Neha",
-                    desc: "Both man and woman must swear on paper about all money and debts. Stops fake poverty.",
-                    link: "https://indiankanoon.org/doc/175821035/"
-                }
-            ]
-        },
-        "dv": {
-            title: "False Domestic Violence (DV)",
-            text: "Fake claims used to break man. Courts say fake claims equal mental attack.",
-            cases: [
-                {
-                    name: "K. Srinivas Rao v. D.A. Deepa",
-                    desc: "Wife making fake criminal complaints is mental cruelty. Ground for divorce.",
-                    link: "https://indiankanoon.org/doc/1107936/"
-                }
-            ]
-        },
-        "custody": {
-            title: "Child Custody",
-            text: "Fight for offspring. Man has rights. Child needs both.",
-            cases: [
-                {
-                    name: "Yashita Sahu v. State of Rajasthan",
-                    desc: "Custody not ownership. Man gets real access. Child welfare most important.",
-                    link: "https://indiankanoon.org/doc/81617415/"
-                }
-            ]
-        }
-    };
+    // PUT YOUR REAL SUPABASE CREDS HERE
+    const SUPABASE_URL = "https://kgbcygfemcdorqryvxdp.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnYmN5Z2ZlbWNkb3Jxcnl2eGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzUxNDAsImV4cCI6MjA5NTM1MTE0MH0.XPc2iS9rfmrwRh6f_1IGIiIr1wbqzafJPXnk389yLT0";
 
-    function huntLaw() {
-        let input = document.getElementById('searchBox').value.toLowerCase();
-        let outputBox = document.getElementById('output');
-        let titleBox = document.getElementById('lawTitle');
-        let textBox = document.getElementById('lawSimpleText');
-        let casesArea = document.getElementById('casesArea');
+    // Initialize Supabase Client
+    const supabase = supa.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let found = false;
+    async function huntDataPit() {
+        const input = document.getElementById('searchBox').value.trim();
+        const outputBox = document.getElementById('output');
+        const statusBox = document.getElementById('statusMessage');
+        const titleBox = document.getElementById('lawTitle');
+        const textBox = document.getElementById('lawSimpleText');
+        const casesArea = document.getElementById('casesArea');
 
-        for (let key in lawData) {
-            if (input.includes(key) && input.length > 2) {
-                let data = lawData[key];
-                titleBox.innerText = data.title;
-                textBox.innerText = data.text;
+        if (!input) return;
+
+        // Reset and show loading status
+        outputBox.style.display = "none";
+        statusBox.style.display = "block";
+        statusBox.innerText = "Hunting in pit...";
+
+        try {
+            // Complex search: check section number match OR title keyword match
+            // Pulls law data AND nested judgments through junction table
+            const { data, error } = await supabase
+                .from('laws')
+                .select(`
+                    id,
+                    code_type,
+                    section_number,
+                    title,
+                    simple_text,
+                    law_judgments (
+                        judgments (
+                            case_name,
+                            summary,
+                            reference_url
+                        )
+                    )
+                `)
+                .or(`section_number.eq.${input},title.ilike.%${input}%,simple_text.ilike.%${input}%`)
+                .limit(1);
+
+            statusBox.style.display = "none";
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const law = data;
+                titleBox.innerText = `${law.code_type} Section ${law.section_number}: ${law.title}`;
+                textBox.innerText = law.simple_text;
+
+                // Extract linked judgments from inner join payload
+                let caseHTML = "<h3>Shield Judgments (Men Rights):</h3>";
+                const relationships = law.law_judgments || [];
                 
-                let caseHTML = "<h3>Shield Judgments:</h3>";
-                data.cases.forEach(c => {
-                    caseHTML += `<div class="case-law">
-                        <strong>${c.name}</strong><br>
-                        <p>${c.desc}</p>
-                        <a href="${c.link}" target="_blank">Read Full Fact</a>
-                    </div>`;
-                });
-                
+                if (relationships.length > 0) {
+                    relationships.forEach(rel => {
+                        if (rel.judgments) {
+                            const c = rel.judgments;
+                            caseHTML += `
+                                <div class="case-law">
+                                    <strong>${c.case_name}</strong>
+                                    <p>${c.summary}</p>
+                                    <a href="${c.reference_url}" target="_blank">Verify Verdict ↗</a>
+                                </div>`;
+                        }
+                    });
+                } else {
+                    caseHTML += "<p>No specific shield judgment tied to this section yet.</p>";
+                }
+
                 casesArea.innerHTML = caseHTML;
                 outputBox.style.display = "block";
-                found = true;
-                break;
+            } else {
+                statusBox.style.display = "block";
+                statusBox.innerText = "No laws found in pit for that query.";
             }
-        }
 
-        if (!found) {
-            outputBox.style.display = "none";
+        } catch (err) {
+            console.error(err);
+            statusBox.style.display = "block";
+            statusBox.innerText = "Error! Machine broken or wrong credentials.";
         }
     }
 </script>
