@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Law Shield - Live Pit</title>
+    <title>Law Shield - Smart Translation</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
@@ -27,16 +27,13 @@
             color: #ffffff;
             text-align: center;
             margin-top: 0;
-            font-size: 28px;
-            letter-spacing: 1px;
         }
         .search-box-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
-        input {
-            flex: 1;
+        input, button {
             padding: 15px;
             font-size: 16px;
             border: 1px solid #444;
@@ -44,22 +41,37 @@
             background-color: #333;
             color: #fff;
         }
-        input:focus {
-            outline: 2px solid #ff9900;
-        }
+        input { flex: 1; }
         button {
-            padding: 0 25px;
-            font-size: 16px;
             background-color: #ff9900;
             color: #000;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
             font-weight: bold;
+            cursor: pointer;
+            border: none;
         }
-        button:hover {
-            background-color: #ffb347;
+        button:hover { background-color: #ffb347; }
+        
+        /* Language Selector Stones */
+        .lang-bar {
+            display: none;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
         }
+        .lang-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        .lang-btn.active {
+            background-color: #0099ff;
+            color: #fff;
+            border-color: #0099ff;
+        }
+
         .result-box {
             display: none;
             background-color: #333;
@@ -67,159 +79,160 @@
             border-radius: 6px;
             border-left: 5px solid #ff9900;
         }
-        .case-law {
-            background-color: #444;
-            margin-top: 15px;
+        .action-zone {
+            background-color: #2b3a2b;
+            border-left: 5px solid #28a745;
             padding: 15px;
-            border-radius: 6px;
-            border-left: 5px solid #0099ff;
+            margin-top: 20px;
+            border-radius: 4px;
         }
-        a {
+        .optional-links {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed #555;
+            font-size: 14px;
+        }
+        .case-link {
+            display: block;
+            margin-top: 5px;
             color: #0099ff;
             text-decoration: none;
-            font-weight: bold;
         }
-        a:hover {
-            text-decoration: underline;
-        }
-        .status {
-            color: #aaa;
-            font-style: italic;
-            margin-top: 10px;
-            display: none;
-        }
+        .status { color: #aaa; font-style: italic; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Law Shield Search</h1>
+    <h1>Law Shield Core</h1>
     
     <div class="search-box-container">
-        <input type="text" id="searchBox" placeholder="Enter section number or keyword (e.g., 85, 498A, DV)...">
+        <input type="text" id="searchBox" placeholder="Enter Section Number (e.g., 85)...">
         <button onclick="huntDataPit()">Search</button>
     </div>
     
-    <div id="statusMessage" class="status">Hunting in pit...</div>
+    <div id="langBar" class="lang-bar">
+        <button class="lang-btn active" id="btn-en" onclick="switchLang('en')">English</button>
+        <button class="lang-btn" id="btn-hi" onclick="switchLang('hi')">हिंदी (Hindi)</button>
+        <button class="lang-btn" id="btn-mr" onclick="switchLang('mr')">मराठी (Marathi)</button>
+    </div>
+    
+    <div id="statusMessage" class="status">Hunting...</div>
 
     <div id="output" class="result-box">
         <h2 id="lawTitle"></h2>
+        
+        <h3>1. Law Simplified:</h3>
         <p id="lawSimpleText"></p>
-        <div id="casesArea"></div>
+        
+        <div class="action-zone">
+            <h3>2. Immediate Next Steps for Man:</h3>
+            <p id="lawNextSteps"></p>
+        </div>
+        
+        <div class="optional-links" id="optionalLinksZone">
+            <!-- Verifiable Case Links Show Up Here Dynamically -->
+        </div>
     </div>
 </div>
 
 <script>
-    // PUT YOUR REAL SUPABASE CREDS HERE
     const SUPABASE_URL = "https://kgbcygfemcdorqryvxdp.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnYmN5Z2ZlbWNkb3Jxcnl2eGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzUxNDAsImV4cCI6MjA5NTM1MTE0MH0.XPc2iS9rfmrwRh6f_1IGIiIr1wbqzafJPXnk389yLT0";
-
     const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let activeLawData = null; // Holds the current live data stone
 
     async function huntDataPit() {
         const rawInput = document.getElementById('searchBox').value.trim();
         const outputBox = document.getElementById('output');
         const statusBox = document.getElementById('statusMessage');
-        const titleBox = document.getElementById('lawTitle');
-        const textBox = document.getElementById('lawSimpleText');
-        const casesArea = document.getElementById('casesArea');
+        const langBar = document.getElementById('langBar');
 
         if (!rawInput) return;
 
         outputBox.style.display = "none";
+        langBar.style.display = "none";
         statusBox.style.display = "block";
-        statusBox.innerText = "Hunting in pit...";
 
         try {
-            // Base query builder
-            let query = sbClient.from('laws').select(`
-                id,
-                code_type,
-                section_number,
-                title,
-                simple_text,
-                law_judgments (
-                    judgments (
-                        case_name,
-                        summary,
-                        reference_url
-                    )
-                )
-            `);
-
-            // SMART PARSER: Split text and numbers
-            const numMatch = rawInput.match(/\d+/); // Find numbers
-            const letterMatch = rawInput.match(/[a-zA-Z]+/); // Find letters
-
-            if (numMatch && letterMatch) {
-                // Case 1: User typed "BNS 85" or "85 BNS"
-                const num = numMatch[0];
-                const code = letterMatch[0].toUpperCase();
-                query = query.eq('code_type', code).eq('section_number', num);
-            } else if (numMatch) {
-                // Case 2: User typed just number "85"
-                query = query.eq('section_number', numMatch[0]);
-            } else {
-                // Case 3: User typed keyword "cruelty" or "maintenance"
-                query = query.or(`title.ilike.%${rawInput}%,simple_text.ilike.%${rawInput}%`);
+            const numMatch = rawInput.match(/\d+/);
+            if (!numMatch) {
+                statusBox.innerText = "Error: Please enter a valid numerical section number.";
+                return;
             }
 
-            // Execute the built spear query
-            const { data, error } = await query;
+            const { data, error } = await sbClient
+                .from('laws')
+                .select(`
+                    code_type, section_number, title, simple_text, next_steps,
+                    simple_text_hi, next_steps_hi, simple_text_mr, next_steps_mr,
+                    law_judgments ( judgments ( case_name, reference_url ) )
+                `)
+                .eq('section_number', numMatch[0])
+                .limit(1);
 
             statusBox.style.display = "none";
-
             if (error) throw error;
 
-            // Display many results if found, not just limit 1
             if (data && data.length > 0) {
-                let finalHTML = "";
-                
-                data.forEach(law => {
-                    let caseHTML = "<h4>Shield Judgments (Men Rights):</h4>";
-                    const relationships = law.law_judgments || [];
-                    
-                    if (relationships.length > 0) {
-                        relationships.forEach(rel => {
-                            if (rel.judgments) {
-                                const c = rel.judgments;
-                                caseHTML += `
-                                    <div class="case-law">
-                                        <strong>${c.case_name}</strong>
-                                        <p>${c.summary}</p>
-                                        <a href="${c.reference_url}" target="_blank">Verify Verdict ↗</a>
-                                    </div>`;
-                            }
-                        });
-                    } else {
-                        caseHTML += "<p>No specific shield judgment tied to this section yet.</p>";
-                    }
-
-                    finalHTML += `
-                        <div style="margin-bottom: 30px; border-bottom: 1px solid #444; padding-bottom: 20px;">
-                            <h2>${law.code_type} Section ${law.section_number}: ${law.title}</h2>
-                            <p>${law.simple_text}</p>
-                            ${caseHTML}
-                        </div>
-                    `;
-                });
-
-                // Inject into single output box container
-                titleBox.innerText = "Search Results Matrix";
-                textBox.innerHTML = finalHTML;
-                casesArea.innerHTML = ""; 
+                activeLawData = data[0];
+                langBar.style.display = "flex";
+                switchLang('en'); // Default to English display
                 outputBox.style.display = "block";
             } else {
                 statusBox.style.display = "block";
-                statusBox.innerText = "No laws found for: " + rawInput;
+                statusBox.innerText = "No match inside the data pit.";
             }
-
         } catch (err) {
             console.error(err);
-            statusBox.style.display = "block";
-            statusBox.innerText = "Error! Connection broke or code mistake.";
+            statusBox.innerText = "Pit connection error.";
         }
     }
+
+    function switchLang(lang) {
+        if (!activeLawData) return;
+
+        // Reset active status on buttons
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${lang}`).classList.add('active');
+
+        const titleBox = document.getElementById('lawTitle');
+        const textBox = document.getElementById('lawSimpleText');
+        const stepsBox = document.getElementById('lawNextSteps');
+        const linksZone = document.getElementById('optionalLinksZone');
+
+        // Render based on selected language block
+        if (lang === 'hi') {
+            titleBox.innerText = `${activeLawData.code_type} धारा ${activeLawData.section_number}`;
+            textBox.innerText = activeLawData.simple_text_hi || "अनुवाद उपलब्ध नहीं है।";
+            stepsBox.innerText = activeLawData.next_steps_hi || "कोई कदम दर्ज नहीं किया गया।";
+        } else if (lang === 'mr') {
+            titleBox.innerText = `${activeLawData.code_type} कलम ${activeLawData.section_number}`;
+            textBox.innerText = activeLawData.simple_text_mr || "भाषांतर उपलब्ध नाही.";
+            stepsBox.innerText = activeLawData.next_steps_mr || "पुढील पावले उपलब्ध नाहीत.";
+        } else {
+            // English default
+            titleBox.innerText = `${activeLawData.code_type} Section ${activeLawData.section_number}: ${activeLawData.title}`;
+            textBox.innerText = activeLawData.simple_text;
+            stepsBox.innerText = activeLawData.next_steps || "No next steps defined.";
+        }
+
+        // Render completely optional case links at the bottom
+        let linksHTML = "<strong>Optional Verification Links:</strong>";
+        const relations = activeLawData.law_judgments || [];
+        if (relations.length > 0) {
+            relations.forEach(r => {
+                if (r.judgments) {
+                    linksHTML += `<a class="case-link" href="${r.judgments.reference_url}" target="_blank">Verify Verdict: ${r.judgments.case_name} ↗</a>`;
+                }
+            });
+        } else {
+            linksHTML += "<p style='color:#777; margin:5px 0 0 0;'>No external citations linked.</p>";
+        }
+        linksZone.innerHTML = linksHTML;
+    }
 </script>
+
 </body>
 </html>
