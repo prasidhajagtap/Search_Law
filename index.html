@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Law Shield</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: #ddd;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #333;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-top: 0;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            background-color: #444;
+            color: #fff;
+        }
+        input:focus {
+            outline: 2px solid #f90;
+        }
+        .result-box {
+            display: none;
+            background-color: #444;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 5px solid #f90;
+        }
+        .case-law {
+            background-color: #555;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 5px solid #09f;
+        }
+        a {
+            color: #09f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Law Shield Search</h1>
+    <input type="text" id="searchBox" placeholder="Search BNS 85, Maintenance, DV, Custody..." onkeyup="huntLaw()">
+    
+    <div id="output" class="result-box">
+        <h2 id="lawTitle"></h2>
+        <p id="lawSimpleText"></p>
+        <div id="casesArea"></div>
+    </div>
+</div>
+
+<script>
+    const lawData = {
+        "bns 85": {
+            title: "BNS 85 (Old IPC 498A)",
+            text: "Rule about cruelty by husband or family. High danger of fake traps.",
+            cases: [
+                {
+                    name: "Arnesh Kumar v. State of Bihar",
+                    desc: "Shield against arrest. Police cannot arrest automatically. Magistrate must verify.",
+                    link: "https://indiankanoon.org/doc/2982102/"
+                },
+                {
+                    name: "Kahkashan Kausar v. State of Bihar",
+                    desc: "Protects parents and siblings. Vague anger not enough for case.",
+                    link: "https://indiankanoon.org/doc/112651475/"
+                }
+            ]
+        },
+        "maintenance": {
+            title: "Maintenance & Alimony",
+            text: "Rules for giving shiny rocks and food. Woman cannot hide wealth.",
+            cases: [
+                {
+                    name: "Rajnesh v. Neha",
+                    desc: "Both man and woman must swear on paper about all money and debts. Stops fake poverty.",
+                    link: "https://indiankanoon.org/doc/175821035/"
+                }
+            ]
+        },
+        "dv": {
+            title: "False Domestic Violence (DV)",
+            text: "Fake claims used to break man. Courts say fake claims equal mental attack.",
+            cases: [
+                {
+                    name: "K. Srinivas Rao v. D.A. Deepa",
+                    desc: "Wife making fake criminal complaints is mental cruelty. Ground for divorce.",
+                    link: "https://indiankanoon.org/doc/1107936/"
+                }
+            ]
+        },
+        "custody": {
+            title: "Child Custody",
+            text: "Fight for offspring. Man has rights. Child needs both.",
+            cases: [
+                {
+                    name: "Yashita Sahu v. State of Rajasthan",
+                    desc: "Custody not ownership. Man gets real access. Child welfare most important.",
+                    link: "https://indiankanoon.org/doc/81617415/"
+                }
+            ]
+        }
+    };
+
+    function huntLaw() {
+        let input = document.getElementById('searchBox').value.toLowerCase();
+        let outputBox = document.getElementById('output');
+        let titleBox = document.getElementById('lawTitle');
+        let textBox = document.getElementById('lawSimpleText');
+        let casesArea = document.getElementById('casesArea');
+
+        let found = false;
+
+        for (let key in lawData) {
+            if (input.includes(key) && input.length > 2) {
+                let data = lawData[key];
+                titleBox.innerText = data.title;
+                textBox.innerText = data.text;
+                
+                let caseHTML = "<h3>Shield Judgments:</h3>";
+                data.cases.forEach(c => {
+                    caseHTML += `<div class="case-law">
+                        <strong>${c.name}</strong><br>
+                        <p>${c.desc}</p>
+                        <a href="${c.link}" target="_blank">Read Full Fact</a>
+                    </div>`;
+                });
+                
+                casesArea.innerHTML = caseHTML;
+                outputBox.style.display = "block";
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            outputBox.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
